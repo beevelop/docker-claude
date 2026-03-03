@@ -4,10 +4,9 @@ set -euo pipefail
 echo "[claude-entrypoint] Starting Claude Code container..."
 
 # --- SSH deploy key setup ---
-SSH_KEY="/run/secrets/deploy_key"
-if [[ -s "${SSH_KEY}" ]]; then
+if [[ -n "${DEPLOY_KEY:-}" ]]; then
   echo "[claude-entrypoint] Configuring SSH deploy key..."
-  cp "${SSH_KEY}" /home/node/.ssh/id_ed25519
+  echo "${DEPLOY_KEY}" > /home/node/.ssh/id_ed25519
   chmod 600 /home/node/.ssh/id_ed25519
   echo "[claude-entrypoint] SSH deploy key configured."
 else
