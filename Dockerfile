@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim
+FROM node:25-bookworm-slim
 
 ENV CLAUDE_CODE_VERSION=2.1.63
 
