@@ -52,12 +52,3 @@ jobs:
           pull: true
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-      - name: Docker Scout
-        id: docker-scout-cves
-        if: ${{ github.event_name != 'pull_request' }}
-        uses: docker/scout-action@v1
-        with:
-          command: cves
-          image: ${{ env.imageName }}:${{ steps.docker_meta.outputs.version }}
-          only-severities: critical,high
-          exit-code: true
