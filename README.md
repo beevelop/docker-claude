@@ -11,7 +11,7 @@ docker run -d \
   --name claude \
   --restart unless-stopped \
   -e ANTHROPIC_API_KEY=sk-ant-api03-xxxx \
-  -e DEPLOY_KEY="$(cat deploy_key)" \
+  -e DEPLOY_KEY_B64="$(base64 < deploy_key | tr -d '\n')" \
   -e GIT_REPO=git@github.com:your-org/your-repo.git \
   -e GIT_USER_NAME="Claude Code" \
   -e GIT_USER_EMAIL="claude@example.com" \
@@ -27,11 +27,12 @@ docker run -d \
 |----------|----------|-------------|
 | `ANTHROPIC_API_KEY` | Yes* | Anthropic API key for authentication |
 | `CLAUDE_CODE_OAUTH_TOKEN` | Yes* | OAuth token for Claude Pro/Max subscription (alternative to API key) |
-| `DEPLOY_KEY` | No | SSH private key content for git authentication |
+| `DEPLOY_KEY_B64` | No | Base64-encoded SSH private key for git authentication |
 | `GIT_REPO` | No | SSH clone URL (e.g., `git@github.com:org/repo.git`) |
 | `GIT_BRANCH` | No | Branch to clone (defaults to repo default) |
 | `GIT_USER_NAME` | No | Git commit author name |
 | `GIT_USER_EMAIL` | No | Git commit author email |
+| `CLAUDE_PERMISSION_MODE` | No | Permission mode for `remote-control`: `default`, `acceptEdits` (default), `bypassPermissions`, `dontAsk`, `plan` |
 | `INIT_COMMAND` | No | One-time setup command (runs once, tracked via stamp file) |
 | `CLAUDE_EXTRA_ARGS` | No | Extra flags passed to `claude remote-control` |
 
@@ -48,7 +49,10 @@ The image supports SSH deploy keys for git clone/push. GitHub host keys are bake
 
 2. Add `deploy_key.pub` as a deploy key to your GitHub repo (with write access).
 
-3. Pass the private key content via the `DEPLOY_KEY` environment variable.
+3. Base64-encode the private key and pass it via the `DEPLOY_KEY_B64` environment variable:
+   ```bash
+   base64 < deploy_key | tr -d '\n'
+   ```
 
 On first start, if `GIT_REPO` is set and `/workspace` is empty, the entrypoint clones the repository automatically.
 

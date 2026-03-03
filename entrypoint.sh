@@ -4,9 +4,9 @@ set -euo pipefail
 echo "[claude-entrypoint] Starting Claude Code container..."
 
 # --- SSH deploy key setup ---
-if [[ -n "${DEPLOY_KEY:-}" ]]; then
+if [[ -n "${DEPLOY_KEY_B64:-}" ]]; then
   echo "[claude-entrypoint] Configuring SSH deploy key..."
-  echo "${DEPLOY_KEY}" > /home/node/.ssh/id_ed25519
+  echo "${DEPLOY_KEY_B64}" | base64 -d > /home/node/.ssh/id_ed25519
   chmod 600 /home/node/.ssh/id_ed25519
   echo "[claude-entrypoint] SSH deploy key configured."
 else
@@ -52,7 +52,22 @@ if [[ -n "${INIT_COMMAND:-}" ]]; then
 fi
 
 echo "[claude-entrypoint] Claude Code version: $(claude --version)"
-echo "[claude-entrypoint] Launching: claude remote-control ${CLAUDE_EXTRA_ARGS:-}"
+
+# --- Build launch command ---
+LAUNCH_ARGS=("claude" "remote-control")
+
+# Permission mode (default: acceptEdits)
+MODE="${CLAUDE_PERMISSION_MODE:-acceptEdits}"
+LAUNCH_ARGS+=("--permission-mode" "${MODE}")
+
+# Append any extra user-provided flags
+if [[ -n "${CLAUDE_EXTRA_ARGS:-}" ]]; then
+  # Word-split CLAUDE_EXTRA_ARGS intentionally
+  read -ra EXTRA <<< "${CLAUDE_EXTRA_ARGS}"
+  LAUNCH_ARGS+=("${EXTRA[@]}")
+fi
+
+echo "[claude-entrypoint] Launching: ${LAUNCH_ARGS[*]}"
 
 # Remote Control requires a TTY; docker-compose sets tty: true and stdin_open: true
-exec bash -lc "claude remote-control ${CLAUDE_EXTRA_ARGS:-}"
+exec "${LAUNCH_ARGS[@]}"
