@@ -25,6 +25,7 @@ RUN mkdir -p /home/node/.ssh && \
     chmod 644 /home/node/.ssh/known_hosts
 
 # Workspace where projects will be mounted
+RUN mkdir -p /workspace && chown node:node /workspace
 WORKDIR /workspace
 
 # Run as non-root for safety
