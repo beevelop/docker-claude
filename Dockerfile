@@ -17,6 +17,13 @@ RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} && \
 ENV CLAUDE_HOME=/opt/claude
 RUN mkdir -p "${CLAUDE_HOME}" && chown -R node:node "${CLAUDE_HOME}"
 
+# Pre-populate SSH known_hosts with GitHub host keys (avoids interactive prompt)
+RUN mkdir -p /home/node/.ssh && \
+    ssh-keyscan -t ed25519,rsa github.com >> /home/node/.ssh/known_hosts 2>/dev/null && \
+    chown -R node:node /home/node/.ssh && \
+    chmod 700 /home/node/.ssh && \
+    chmod 644 /home/node/.ssh/known_hosts
+
 # Workspace where projects will be mounted
 WORKDIR /workspace
 
