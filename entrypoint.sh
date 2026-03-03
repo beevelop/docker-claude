@@ -40,11 +40,13 @@ if [[ -n "${GIT_REPO:-}" ]]; then
 fi
 
 # --- One-time init command ---
+INIT_MARKER="/home/node/.claude/.init_done"
 if [[ -n "${INIT_COMMAND:-}" ]]; then
-  if [[ ! -f "${CLAUDE_HOME}/.init_done" ]]; then
+  if [[ ! -f "${INIT_MARKER}" ]]; then
     echo "[claude-entrypoint] Running INIT_COMMAND..."
     bash -lc "${INIT_COMMAND}"
-    touch "${CLAUDE_HOME}/.init_done"
+    mkdir -p /home/node/.claude
+    touch "${INIT_MARKER}"
     echo "[claude-entrypoint] INIT_COMMAND complete."
   else
     echo "[claude-entrypoint] INIT_COMMAND already completed; skipping."
@@ -52,6 +54,36 @@ if [[ -n "${INIT_COMMAND:-}" ]]; then
 fi
 
 echo "[claude-entrypoint] Claude Code version: $(claude --version)"
+
+# --- Authentication check ---
+CRED_FILE="/home/node/.claude/.credentials.json"
+
+if [[ -f "${CRED_FILE}" ]] && [[ -s "${CRED_FILE}" ]]; then
+  echo "[claude-entrypoint] Existing credentials found; skipping login."
+else
+  echo ""
+  echo "=============================================="
+  echo "  FIRST LAUNCH — Interactive login required"
+  echo "=============================================="
+  echo ""
+  echo "  Claude Code remote-control requires an OAuth login."
+  echo "  Please complete the login flow below."
+  echo ""
+  echo "  After login succeeds, press Ctrl+C to continue"
+  echo "  and launch remote-control mode."
+  echo ""
+  echo "=============================================="
+  echo ""
+
+  # Run login interactively; user completes OAuth in browser
+  claude login || true
+
+  if [[ -f "${CRED_FILE}" ]] && [[ -s "${CRED_FILE}" ]]; then
+    echo "[claude-entrypoint] Login successful. Credentials saved."
+  else
+    echo "[claude-entrypoint] WARNING: Login may not have completed. Attempting to launch anyway..."
+  fi
+fi
 
 # --- Build launch command ---
 LAUNCH_ARGS=("claude" "remote-control")

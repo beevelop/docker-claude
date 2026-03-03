@@ -5,17 +5,15 @@ ENV CLAUDE_CODE_VERSION=2.1.63
 # Basic OS tooling for Claude Code operations
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
-      git curl ca-certificates bash openssh-client ripgrep jq procps && \
-    rm -rf /var/lib/apt/lists/*
+      git curl ca-certificates bash openssh-client ripgrep jq procps sudo && \
+    rm -rf /var/lib/apt/lists/* && \
+    echo "node ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/node && \
+    chmod 0440 /etc/sudoers.d/node
 
 # Install Claude Code CLI
 RUN npm install -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} && \
     npm cache clean --force 2>/dev/null && \
     claude --version
-
-# Where Claude will keep its config/credentials/history
-ENV CLAUDE_HOME=/opt/claude
-RUN mkdir -p "${CLAUDE_HOME}" && chown -R node:node "${CLAUDE_HOME}"
 
 # Pre-populate SSH known_hosts with GitHub host keys (avoids interactive prompt)
 RUN mkdir -p /home/node/.ssh && \
@@ -23,6 +21,11 @@ RUN mkdir -p /home/node/.ssh && \
     chown -R node:node /home/node/.ssh && \
     chmod 700 /home/node/.ssh && \
     chmod 644 /home/node/.ssh/known_hosts
+
+# Prepare Claude config directory and onboarding marker
+RUN mkdir -p /home/node/.claude && \
+    echo '{"hasCompletedOnboarding":true,"installMethod":"native"}' > /home/node/.claude.json && \
+    chown -R node:node /home/node/.claude /home/node/.claude.json
 
 # Workspace where projects will be mounted
 RUN mkdir -p /workspace && chown node:node /workspace
