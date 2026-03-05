@@ -6,8 +6,8 @@ echo "[claude-entrypoint] Starting Claude Code container..."
 # --- SSH deploy key setup ---
 if [[ -n "${DEPLOY_KEY_B64:-}" ]]; then
   echo "[claude-entrypoint] Configuring SSH deploy key..."
-  echo "${DEPLOY_KEY_B64}" | base64 -d > /home/node/.ssh/id_ed25519
-  chmod 600 /home/node/.ssh/id_ed25519
+  echo "${DEPLOY_KEY_B64}" | base64 -d > /home/developer/.ssh/id_ed25519
+  chmod 600 /home/developer/.ssh/id_ed25519
   echo "[claude-entrypoint] SSH deploy key configured."
 else
   echo "[claude-entrypoint] No deploy key found; skipping SSH setup."
@@ -40,12 +40,12 @@ if [[ -n "${GIT_REPO:-}" ]]; then
 fi
 
 # --- One-time init command ---
-INIT_MARKER="/home/node/.claude/.init_done"
+INIT_MARKER="/home/developer/.claude/.init_done"
 if [[ -n "${INIT_COMMAND:-}" ]]; then
   if [[ ! -f "${INIT_MARKER}" ]]; then
     echo "[claude-entrypoint] Running INIT_COMMAND..."
     bash -lc "${INIT_COMMAND}"
-    mkdir -p /home/node/.claude
+    mkdir -p /home/developer/.claude
     touch "${INIT_MARKER}"
     echo "[claude-entrypoint] INIT_COMMAND complete."
   else
@@ -56,7 +56,7 @@ fi
 echo "[claude-entrypoint] Claude Code version: $(claude --version)"
 
 # --- Authentication check ---
-CRED_FILE="/home/node/.claude/.credentials.json"
+CRED_FILE="/home/developer/.claude/.credentials.json"
 
 if [[ -f "${CRED_FILE}" ]] && [[ -s "${CRED_FILE}" ]]; then
   echo "[claude-entrypoint] Existing credentials found; skipping login."
@@ -91,6 +91,11 @@ LAUNCH_ARGS=("claude" "remote-control")
 # Permission mode (default: acceptEdits)
 MODE="${CLAUDE_PERMISSION_MODE:-acceptEdits}"
 LAUNCH_ARGS+=("--permission-mode" "${MODE}")
+
+# Session name (visible in claude.ai/code)
+if [[ -n "${CLAUDE_SESSION_NAME:-}" ]]; then
+  LAUNCH_ARGS+=("--name" "${CLAUDE_SESSION_NAME}")
+fi
 
 # Append any extra user-provided flags
 if [[ -n "${CLAUDE_EXTRA_ARGS:-}" ]]; then

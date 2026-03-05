@@ -2,7 +2,7 @@
 
 Docker image for [Claude Code](https://code.claude.com/) with remote control support. Designed for 24/7 headless operation on a remote server, accessible via the Claude mobile/web app.
 
-Based on `node:22-bookworm-slim` with Claude Code CLI pre-installed.
+Based on `ubuntu:24.04` with a full developer toolchain (Node.js 22, Python 3, build-essential, ripgrep, fzf, etc.) and Claude Code CLI pre-installed via the official installer.
 
 ## Quick Start
 
@@ -14,7 +14,7 @@ docker run -d \
   -e GIT_REPO=git@github.com:your-org/your-repo.git \
   -e GIT_USER_NAME="Claude Code" \
   -e GIT_USER_EMAIL="claude@example.com" \
-  -v claude_config:/home/node/.claude \
+  -v claude_config:/home/developer/.claude \
   -v claude_workspace:/workspace \
   --tty --interactive \
   beevelop/claude:latest
@@ -45,18 +45,18 @@ Claude Code stores its credentials in these locations inside the container:
 
 | Path | Purpose |
 |------|---------|
-| `/home/node/.claude/.credentials.json` | OAuth tokens (access + refresh) |
-| `/home/node/.claude.json` | Account metadata and onboarding state |
-| `/home/node/.claude/` | Full config directory (credentials, settings, history) |
+| `/home/developer/.claude/.credentials.json` | OAuth tokens (access + refresh) |
+| `/home/developer/.claude.json` | Account metadata and onboarding state |
+| `/home/developer/.claude/` | Full config directory (credentials, settings, history) |
 
-To persist credentials across container restarts, mount a volume at `/home/node/.claude`:
+To persist credentials across container restarts, mount a volume at `/home/developer/.claude`:
 
 ```yaml
 volumes:
-  - claude_config:/home/node/.claude
+  - claude_config:/home/developer/.claude
 ```
 
-The image pre-seeds `/home/node/.claude.json` with onboarding state so Claude Code does not prompt for initial setup.
+The image pre-seeds `/home/developer/.claude.json` with onboarding state so Claude Code does not prompt for initial setup.
 
 ## Environment Variables
 
@@ -68,6 +68,7 @@ The image pre-seeds `/home/node/.claude.json` with onboarding state so Claude Co
 | `GIT_USER_NAME` | No | Git commit author name |
 | `GIT_USER_EMAIL` | No | Git commit author email |
 | `CLAUDE_PERMISSION_MODE` | No | Permission mode for `remote-control`: `default`, `acceptEdits` (default), `bypassPermissions`, `dontAsk`, `plan` |
+| `CLAUDE_SESSION_NAME` | No | Custom session title visible in claude.ai/code (e.g., `"My Project"`) |
 | `INIT_COMMAND` | No | One-time setup command (runs once on first launch, tracked via stamp file) |
 | `CLAUDE_EXTRA_ARGS` | No | Extra flags passed to `claude remote-control` |
 
@@ -93,7 +94,7 @@ On first start, if `GIT_REPO` is set and `/workspace` is empty, the entrypoint c
 
 | Path | Purpose |
 |------|---------|
-| `/home/node/.claude` | Claude credentials, config, and history (persists login across restarts) |
+| `/home/developer/.claude` | Claude credentials, config, and history (persists login across restarts) |
 | `/workspace` | Project files (auto-cloned from `GIT_REPO`) |
 
 ## BeeCompose Deployment
