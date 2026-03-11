@@ -34,9 +34,9 @@ RUN mkdir -p /home/developer/.ssh && \
     chmod 700 /home/developer/.ssh && \
     chmod 644 /home/developer/.ssh/known_hosts
 
-# Prepare Claude config directory and onboarding marker
+# Prepare Claude config directory, onboarding marker, and workspace trust
 RUN mkdir -p /home/developer/.claude && \
-    echo '{"hasCompletedOnboarding":true,"installMethod":"native"}' > /home/developer/.claude.json && \
+    echo '{"hasCompletedOnboarding":true,"installMethod":"native","projects":{"/workspace":{"hasTrustDialogAccepted":true,"allowedTools":[]}}}' > /home/developer/.claude.json && \
     chown -R developer:developer /home/developer/.claude /home/developer/.claude.json
 
 # Install Claude Code CLI using the official installer

@@ -55,6 +55,17 @@ fi
 
 echo "[claude-entrypoint] Claude Code version: $(claude --version)"
 
+# --- Ensure workspace trust is accepted (prevents "Workspace not trusted" error in remote-control mode) ---
+CLAUDE_JSON="/home/developer/.claude.json"
+if [[ -f "${CLAUDE_JSON}" ]]; then
+  # Merge trust flag into existing config (preserves all other settings)
+  jq --arg ws "/workspace" '.projects[$ws].hasTrustDialogAccepted = true' "${CLAUDE_JSON}" > "${CLAUDE_JSON}.tmp" \
+    && mv "${CLAUDE_JSON}.tmp" "${CLAUDE_JSON}"
+else
+  echo '{"hasCompletedOnboarding":true,"projects":{"/workspace":{"hasTrustDialogAccepted":true}}}' > "${CLAUDE_JSON}"
+fi
+echo "[claude-entrypoint] Workspace trust accepted for /workspace."
+
 # --- Authentication check ---
 CRED_FILE="/home/developer/.claude/.credentials.json"
 
