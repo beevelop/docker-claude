@@ -59,10 +59,10 @@ echo "[claude-entrypoint] Claude Code version: $(claude --version)"
 CLAUDE_JSON="/home/developer/.claude.json"
 if [[ -f "${CLAUDE_JSON}" ]]; then
   # Merge trust flag into existing config (preserves all other settings)
-  jq --arg ws "/workspace" '.projects[$ws].hasTrustDialogAccepted = true' "${CLAUDE_JSON}" > "${CLAUDE_JSON}.tmp" \
+  jq --arg ws "/workspace" '.remoteDialogSeen = true | .projects[$ws].hasTrustDialogAccepted = true' "${CLAUDE_JSON}" > "${CLAUDE_JSON}.tmp" \
     && mv "${CLAUDE_JSON}.tmp" "${CLAUDE_JSON}"
 else
-  echo '{"hasCompletedOnboarding":true,"projects":{"/workspace":{"hasTrustDialogAccepted":true}}}' > "${CLAUDE_JSON}"
+  echo '{"hasCompletedOnboarding":true,"remoteDialogSeen":true,"projects":{"/workspace":{"hasTrustDialogAccepted":true}}}' > "${CLAUDE_JSON}"
 fi
 echo "[claude-entrypoint] Workspace trust accepted for /workspace."
 
